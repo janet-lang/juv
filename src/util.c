@@ -25,6 +25,12 @@ void juv_schedule(uv_handle_t *req) {
     req->data = fiber;
 }
 
+void juv_toperror(JanetSignal sig, Janet out) {
+    /* Top level error, eventually should register some kind
+     * of handler */
+    janet_printf("uv top level %s: %v\n", janet_signal_names[sig], out);
+}
+
 void juv_resume(uv_handle_t *req, Janet value, int freemem) {
     JanetFiber *fiber = (JanetFiber *)(req->data);
     if (freemem) free(req);
@@ -34,9 +40,7 @@ void juv_resume(uv_handle_t *req, Janet value, int freemem) {
     if (sig == JANET_SIGNAL_YIELD || sig == JANET_SIGNAL_OK) {
         ;
     } else {
-        /* Top level error, eventually should register some kind
-         * of handler */
-        janet_printf("uv top level error: %p\n", sig, out);
+        juv_toperror(sig, out);
     }
 }
 

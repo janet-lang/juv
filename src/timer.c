@@ -1,76 +1,117 @@
+#include "entry.h"
+
+static int timer_mark(void *x, size_t s) {
+    (void) s;
+    uv_timer_t *t = (uv_timer_t *)x;
+    if (NULL != t->data) {
+        janet_mark(janet_wrap_fiber((JanetFiber *) t->data));
+    }
+    return 0;
+}
 
 static const JanetAbstractType timer_type = {
     "uv/timer",
     NULL,
+    timer_mark,
     NULL,
     NULL,
     NULL,
     NULL,
-    NULL,
-    NULL,
+    NULL
 };
 
-static uv_timer_t* juv_gettimer(const Janet *argv, int32_t n) {
-  uv_timer_t* handle = (uv_timer_t*) janet_getabstract(argv, n, &timer_type);
-  return handle;
+static Janet cfun_timer_new(int32_t argc, Janet *argv) {
+    janet_fixarity(argc, 1);
+    JanetFiber *fiber = janet_getfiber(argv, 0);
+    uv_timer_t* handle = (uv_timer_t*) janet_abstract(&timer_type, sizeof(*handle));
+    int ret = uv_timer_init(uv_default_loop(), handle);
+    if (ret < 0) janet_panic("could not create timer");
+    Janet val = janet_wrap_abstract(handle);
+    janet_gcroot(val);
+    handle->data = fiber;
+    return val;
 }
 
-static int luv_new_timer(lua_State* L) {
-  uv_timer_t* handle = (uv_timer_t*) janet_abstract(sizeof(*handle));
-  int ret = uv_timer_init(uv_default_loop(), handle);
-  if (ret < 0) {
-      janet_panic("could not create timer");
-  }
-  handle->data = luv_setup_handle(L);
-  return 1;
+static void timer_cleanup(uv_timer_t *t) {
+    int res = uv_timer_stop(t);
+    janet_gcunroot(janet_wrap_abstract(t));
+    t->data = NULL;
+    if (res < 0) juv_panic(res);
 }
 
-static void luv_timer_cb(uv_timer_t* handle) {
-  lua_State* L = luv_state(handle->loop);
-  luv_handle_t* data = (luv_handle_t*)handle->data;
-  luv_call_callback(L, data, LUV_TIMEOUT, 0);
+static void juv_timer_cb(uv_timer_t* handle) {
+    JanetFiber *fiber = (JanetFiber *)(handle->data);
+    if (fiber == NULL) {
+        timer_cleanup(handle);
+        return;
+    }
+    Janet out;
+    JanetSignal sig = janet_continue(fiber, janet_wrap_nil(), &out);
+    if (sig == JANET_SIGNAL_YIELD) {
+        ;
+    } else if (sig == JANET_SIGNAL_OK) {
+        timer_cleanup(handle);
+    } else {
+        timer_cleanup(handle);
+        juv_toperror(sig, out);
+    }
 }
 
-static int luv_timer_start(lua_State* L) {
-  uv_timer_t* handle = luv_check_timer(L, 1);
-  uint64_t timeout;
-  uint64_t repeat;
-  int ret;
-  timeout = luaL_checkinteger(L, 2);
-  repeat = luaL_checkinteger(L, 3);
-  luv_check_callback(L, (luv_handle_t*)handle->data, LUV_TIMEOUT, 4);
-  ret = uv_timer_start(handle, luv_timer_cb, timeout, repeat);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+static Janet cfun_timer_start(int32_t argc, Janet *argv) {
+    janet_fixarity(argc, 3);
+    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
+    if (handle->data == NULL) {
+        janet_panic("timer has been destroyed, cannot be restarted");
+    }
+    uint64_t repeat = janet_getinteger(argv, 1);
+    uint64_t timeout = janet_getinteger(argv, 2);
+    int ret = uv_timer_start(handle, juv_timer_cb, timeout, repeat);
+    if (ret < 0) juv_panic(ret);
+    return argv[0];
 }
 
-static int luv_timer_stop(lua_State* L) {
-  uv_timer_t* handle = luv_check_timer(L, 1);
-  int ret = uv_timer_stop(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+static Janet cfun_timer_stop(int32_t argc, Janet *argv) {
+    janet_fixarity(argc, 1);
+    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
+    if (handle->data == NULL) return janet_wrap_nil();
+    timer_cleanup(handle);
+    return janet_wrap_nil();
 }
 
-static int luv_timer_again(lua_State* L) {
-  uv_timer_t* handle = luv_check_timer(L, 1);
-  int ret = uv_timer_again(handle);
-  if (ret < 0) return luv_error(L, ret);
-  lua_pushinteger(L, ret);
-  return 1;
+static Janet cfun_timer_again(int32_t argc, Janet *argv) {
+    janet_fixarity(argc, 1);
+    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
+    if (handle->data == NULL) return janet_wrap_nil();
+    int ret = uv_timer_again(handle);
+    if (ret < 0) juv_panic(ret);
+    return argv[0];
 }
 
-static int luv_timer_set_repeat(lua_State* L) {
-  uv_timer_t* handle = luv_check_timer(L, 1);
-  uint64_t repeat = luaL_checkinteger(L, 2);
-  uv_timer_set_repeat(handle, repeat);
-  return 0;
+static Janet cfun_timer_repeat(int32_t argc, Janet *argv) {
+    janet_arity(argc, 1, 2);
+    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
+    if (handle->data == NULL) return janet_wrap_nil();
+    if (argc == 1) {
+        /* get */
+        uint64_t repeat = uv_timer_get_repeat(handle);
+        return janet_wrap_number(repeat);
+    } else {
+        /* set */
+        uint64_t repeat = janet_getinteger(argv, 1);
+        uv_timer_set_repeat(handle, repeat);
+        return argv[0];
+    }
 }
 
-static int luv_timer_get_repeat(lua_State* L) {
-  uv_timer_t* handle = luv_check_timer(L, 1);
-  uint64_t repeat = uv_timer_get_repeat(handle);
-  lua_pushinteger(L, repeat);
-  return 1;
+static const JanetReg cfuns[] = {
+    {"timer/new", cfun_timer_new, NULL},
+    {"timer/start", cfun_timer_start, NULL},
+    {"timer/stop", cfun_timer_stop, NULL},
+    {"timer/again", cfun_timer_again, NULL},
+    {"timer/repeat", cfun_timer_repeat, NULL},
+    {NULL, NULL, NULL}
+};
+
+void submod_timer(JanetTable *env) {
+    janet_cfuns(env, "uv", cfuns);
 }

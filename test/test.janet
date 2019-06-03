@@ -22,14 +22,14 @@
                   (print "i = " i)
                   (yield)))
         t (uv/timer/new f)]
-    (uv/timer/start t 100 1000)))
+    (:start t 100 1000)))
 
 (uv/enter-loop
   (var tt nil)
   (let [f (coro (for i 0 15
                   (print "i = " i)
                   (yield))
-                (uv/timer/repeat tt 10)
+                (:repeat tt 10)
                 (for i 0 150
                   (print "i = " i)
                   (yield)))

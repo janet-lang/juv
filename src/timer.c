@@ -9,11 +9,12 @@ static int timer_mark(void *x, size_t s) {
     return 0;
 }
 
+static Janet timer_method_get(void *p, Janet key);
 static const JanetAbstractType timer_type = {
     "uv/timer",
     NULL,
     timer_mark,
-    NULL,
+    timer_method_get,
     NULL,
     NULL,
     NULL,
@@ -101,6 +102,21 @@ static Janet cfun_timer_repeat(int32_t argc, Janet *argv) {
         uv_timer_set_repeat(handle, repeat);
         return argv[0];
     }
+}
+ 
+static const JanetMethod timer_methods[] = {
+    {"start", cfun_timer_start},
+    {"stop", cfun_timer_stop},
+    {"again", cfun_timer_again},
+    {"repeat", cfun_timer_repeat},
+    {NULL, NULL}
+};
+
+static Janet timer_method_get(void *p, Janet key) {
+    (void) p;
+    if (!janet_checktype(key, JANET_KEYWORD))
+        janet_panicf("expected keyword, got %v", key);
+    return janet_getmethod(janet_unwrap_keyword(key), timer_methods);
 }
 
 static const JanetReg cfuns[] = {

@@ -1,19 +1,10 @@
 #include "entry.h"
 
-static int timer_mark(void *x, size_t s) {
-    (void) s;
-    uv_timer_t *t = (uv_timer_t *)x;
-    if (NULL != t->data) {
-        janet_mark(janet_wrap_fiber((JanetFiber *) t->data));
-    }
-    return 0;
-}
-
 static Janet timer_method_get(void *p, Janet key);
 static const JanetAbstractType timer_type = {
     "uv/timer",
     NULL,
-    timer_mark,
+    juv_handle_mark,
     timer_method_get,
     NULL,
     NULL,
@@ -24,24 +15,24 @@ static const JanetAbstractType timer_type = {
 static Janet cfun_timer_new(int32_t argc, Janet *argv) {
     janet_fixarity(argc, 1);
     JanetFiber *fiber = janet_getfiber(argv, 0);
-    uv_timer_t* handle = (uv_timer_t*) janet_abstract(&timer_type, sizeof(*handle));
+    uv_timer_t* handle = (uv_timer_t*) juv_makehandle(&timer_type, sizeof(*handle));
     int ret = uv_timer_init(uv_default_loop(), handle);
     if (ret < 0) janet_panic("could not create timer");
-    Janet val = janet_wrap_abstract(handle);
+    Janet val = juv_wrap_handle(handle);
     janet_gcroot(val);
-    handle->data = fiber;
+    juv_handle_setfiber(handle, 1, fiber);
     return val;
 }
 
 static void timer_cleanup(uv_timer_t *t) {
     int res = uv_timer_stop(t);
-    janet_gcunroot(janet_wrap_abstract(t));
-    t->data = NULL;
+    janet_gcunroot(juv_wrap_handle(t));
+    juv_handle_setfiber(t, 1, NULL);
     if (res < 0) juv_panic(res);
 }
 
 static void juv_timer_cb(uv_timer_t* handle) {
-    JanetFiber *fiber = (JanetFiber *)(handle->data);
+    JanetFiber *fiber = juv_handle_fiber(handle, 1);
     if (fiber == NULL) {
         timer_cleanup(handle);
         return;
@@ -60,8 +51,8 @@ static void juv_timer_cb(uv_timer_t* handle) {
 
 static Janet cfun_timer_start(int32_t argc, Janet *argv) {
     janet_fixarity(argc, 3);
-    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
-    if (handle->data == NULL) {
+    uv_timer_t *handle = juv_gethandle(argv, 0, &timer_type);
+    if (juv_handle_fiber(handle, 1) == NULL) {
         janet_panic("timer has been destroyed, cannot be restarted");
     }
     uint64_t repeat = janet_getinteger(argv, 1);
@@ -73,16 +64,16 @@ static Janet cfun_timer_start(int32_t argc, Janet *argv) {
 
 static Janet cfun_timer_stop(int32_t argc, Janet *argv) {
     janet_fixarity(argc, 1);
-    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
-    if (handle->data == NULL) return janet_wrap_nil();
+    uv_timer_t *handle = juv_gethandle(argv, 0, &timer_type);
+    if (juv_handle_fiber(handle, 1) == NULL) return janet_wrap_nil();
     timer_cleanup(handle);
     return janet_wrap_nil();
 }
 
 static Janet cfun_timer_again(int32_t argc, Janet *argv) {
     janet_fixarity(argc, 1);
-    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
-    if (handle->data == NULL) return janet_wrap_nil();
+    uv_timer_t *handle = juv_gethandle(argv, 0, &timer_type);
+    if (juv_handle_fiber(handle, 1) == NULL) return janet_wrap_nil();
     int ret = uv_timer_again(handle);
     if (ret < 0) juv_panic(ret);
     return argv[0];
@@ -90,8 +81,8 @@ static Janet cfun_timer_again(int32_t argc, Janet *argv) {
 
 static Janet cfun_timer_repeat(int32_t argc, Janet *argv) {
     janet_arity(argc, 1, 2);
-    uv_timer_t *handle = janet_getabstract(argv, 0, &timer_type);
-    if (handle->data == NULL) return janet_wrap_nil();
+    uv_timer_t *handle = juv_gethandle(argv, 0, &timer_type);
+    if (juv_handle_fiber(handle, 1) == NULL) return janet_wrap_nil();
     if (argc == 1) {
         /* get */
         uint64_t repeat = uv_timer_get_repeat(handle);

@@ -32,7 +32,7 @@ static int get_file_flags(const Janet *argv, int32_t n) {
 static const JanetAbstractType file_type = {
     "uv/file",
     NULL,
-    NULL,
+    juv_handle_mark,
     NULL,
     NULL,
     NULL,
@@ -42,14 +42,14 @@ static const JanetAbstractType file_type = {
 
 /* Wrap a file descriptor */
 static Janet wrap_file(int file) {
-    int *abst = janet_abstract(&file_type, sizeof(int));
+    int *abst = juv_makehandle(&file_type, sizeof(int));
     *abst = file;
-    return janet_wrap_abstract(abst);
+    return juv_wrap_handle(abst);
 }
 
 /* Unwrap a file descriptor */
 static int getfile(const Janet *argv, int32_t n) {
-    void *abst = janet_getabstract(argv, n, &file_type);
+    void *abst = juv_gethandle(argv, n, &file_type);
     return *((int *)abst);
 }
 
@@ -58,7 +58,7 @@ static void cb_open(uv_fs_t *req) {
     int fd = req->result;
     juv_last_error = fd;
     uv_fs_req_cleanup(req);
-    juv_resume((uv_handle_t *)req, wrap_file(fd), 1);
+    juv_resume_req((uv_req_t *)req, wrap_file(fd));
 }
 static Janet cfun_fs_open(int32_t argc, Janet *argv) {
     janet_arity(argc, 1, 3);
@@ -71,12 +71,11 @@ static Janet cfun_fs_open(int32_t argc, Janet *argv) {
     if (argc >= 3) {
         mode = janet_getinteger(argv, 2);
     }
-    uv_fs_t *openreq = malloc(sizeof(uv_fs_t));
-    if (!openreq) janet_panic("no mem.");
+    uv_fs_t *openreq = juv_malloc(sizeof(uv_fs_t));
     int r = uv_fs_open(uv_default_loop(), openreq, path, flags, mode, cb_open);
     if (r < 0) juv_panic(r);
 
-    juv_schedule((uv_handle_t *) openreq);
+    juv_schedule_req((uv_req_t *) openreq);
 
     return janet_wrap_nil();
 }
@@ -84,12 +83,13 @@ static Janet cfun_fs_open(int32_t argc, Janet *argv) {
 /* UV close */
 static void cb_close(uv_fs_t *req) {
     uv_fs_req_cleanup(req);
-    juv_resume((uv_handle_t *)req, janet_wrap_nil(), 1);
+    juv_resume_req((uv_req_t *)req, janet_wrap_nil());
 }
 static Janet cfun_fs_close(int32_t argc, Janet *argv) {
     janet_fixarity(argc, 1);
     int fd = getfile(argv, 0);
-    uv_fs_t *closereq = malloc(sizeof(uv_fs_t));
+    uv_fs_t *closereq = juv_malloc(sizeof(uv_fs_t));
+    juv_schedule_req((uv_req_t *) closereq);
     uv_fs_close(uv_default_loop(), closereq, fd, cb_close);
     return janet_wrap_nil();
 }
@@ -105,8 +105,7 @@ static void cb_read(uv_fs_t *req) {
     JanetBuffer *buffer = janet_buffer(0);
     janet_buffer_push_bytes(buffer, (unsigned char *) (rs->bufs[0].base), rs->bufs[0].len);
     uv_fs_req_cleanup(req);
-    free(req);
-    juv_resume((uv_handle_t *)req, janet_wrap_buffer(buffer), 1);
+    juv_resume_req((uv_req_t *)req, janet_wrap_buffer(buffer));
 }
 static Janet cfun_fs_read(int32_t argc, Janet *argv) {
     janet_fixarity(argc, 2);
@@ -115,8 +114,8 @@ static Janet cfun_fs_read(int32_t argc, Janet *argv) {
     if (bufn < 0) {
         janet_panicf("expected postive integer, got %d", bufn);
     }
-    struct juv_read_state *read_state = malloc(sizeof(struct juv_read_state) + bufn);
-    if (NULL == read_state) janet_panic("no mem.");
+    struct juv_read_state *read_state = juv_malloc(sizeof(struct juv_read_state) + bufn);
+    juv_schedule_req((uv_req_t *) read_state);
     read_state->bufs[0].len = bufn;
     read_state->bufs[0].base = read_state->mem;
     uv_fs_read(uv_default_loop(), &(read_state->req), fd, read_state->bufs, 1, 0, cb_read);

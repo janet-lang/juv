@@ -10,9 +10,17 @@
 
 (declare-native
     :name "uv"
+    :cflags [;default-cflags "-g"]
     :lflags [;default-lflags ;lflags]
+    :defines {"_POSIX_C_SOURCE" "200112"}
     :embedded ["embed/entry.janet"]
+    :headers @["src/entry.h"
+               "src/handle.h"
+               "src/stream.h"]
     :source @["src/entry.c"
               "src/fs.c"
+              "src/handle.c"
+              "src/stream.c"
+              "src/tcp.c"
               "src/timer.c"
               "src/util.c"])

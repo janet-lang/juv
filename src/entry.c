@@ -39,6 +39,9 @@ JANET_MODULE_ENTRY(JanetTable *env) {
             "Libuv version string as a semantic version.");
     submod_fs(env);
     submod_timer(env);
+    submod_tcp(env);
+    submod_stream(env);
+
     /* Embed */
     janet_dobytes(env, embed___entry_embed, embed___entry_embed_size, "[uv/entry.janet]", NULL);
 }

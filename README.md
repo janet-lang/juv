@@ -1,7 +1,8 @@
 # Janet libuv bindings
 
 Bindings to the [libuv](https://libuv.org/) library for asynchronous IO.
-Not yet ready for much of anything, still a working prototype.
+Not yet ready for much of anything, still a working prototype. Kept in sync
+with the latest Janet from master, and is not guaranteed to work with anything but.
 
 ## Building
 

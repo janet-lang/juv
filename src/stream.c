@@ -116,7 +116,7 @@ typedef struct {
 } JuvWrite;
 static void cb_write(uv_write_t *req, int status) {
     if (status) {
-        ;
+        printf("write failed: (%d)\n", status);
     } else {
         JuvWrite *jw = (JuvWrite *)req;
         if (jw->is_buffer) {

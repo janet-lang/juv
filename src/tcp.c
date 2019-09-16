@@ -31,6 +31,13 @@ static Janet juv_tcp_new(int32_t argc, Janet *argv) {
     return val;
 }
 
+static Janet juv_tcp_nodelay(int32_t argc, Janet *argv) {
+    janet_fixarity(argc, 2);
+    uv_tcp_t *tcp = juv_gethandle(argv, 0, &tcp_type);
+    uv_tcp_nodelay(tcp, janet_truthy(argv[1]));
+    return janet_wrap_nil();
+}
+
 static Janet juv_tcp_bind(int32_t argc, Janet *argv) {
     janet_arity(argc, 3, 4);
     uv_tcp_t *tcp = juv_gethandle(argv, 0, &tcp_type);
@@ -120,6 +127,7 @@ static const JanetReg cfuns[] = {
     {"tcp/connect", juv_tcp_connect, NULL},
     {"tcp/sockname", juv_tcp_sockname, NULL},
     {"tcp/peername", juv_tcp_peername, NULL},
+    {"tcp/nodelay", juv_tcp_nodelay, NULL},
     {NULL, NULL, NULL}
 };
 
@@ -141,6 +149,7 @@ static const JanetMethod tcp_methods[] = {
     {"connect", juv_tcp_connect},
     {"sockname", juv_tcp_sockname},
     {"peername", juv_tcp_peername},
+    {"nodelay", juv_tcp_nodelay},
     {NULL, NULL}
 };
 

@@ -4,17 +4,27 @@ Bindings to the [libuv](https://libuv.org/) library for asynchronous IO.
 Not yet ready for much of anything, still a working prototype. Kept in sync
 with the latest Janet from master, and is not guaranteed to work with anything but.
 
+## Installation
+
+```
+[sudo] jpm install https://github.com/janet-lang/juv.git
+```
+
 ## Building
 
-Requires libuv to be installed with a working pkg-config file. This will work
-on most linux distributions if you install libuv from a package manager. Use
-`jpm build` to build the project.
+Make sure you have cloned the libuv submodule as well. You can use `git submodule update --init --recursive` to do this.
+
+```
+jpm build
+```
 
 ## Testing
 
 See the `test` directory for test scripts and programs.
 
-`jpm test`
+```
+jpm test
+```
 
 ## Design
 

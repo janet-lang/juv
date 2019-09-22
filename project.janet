@@ -18,7 +18,7 @@
 
 (declare-native
   :name "uv"
-  :lflags lflags
+  :lflags 'lflags
   :cflags [;default-cflags "-Ilibuv/include" "-Ilibuv/src"]
   :defines (case (os/which)
              :windows {"_WIN32_WINNT" "0x0600"

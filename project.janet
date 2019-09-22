@@ -5,23 +5,28 @@
 
 # Use pkg-config for now to get libuv flags
 (def lflags (case (os/which)
-              :windows ["-ladvapi32"
-                        "-liphlpapi"
-                        "-lpsapi"
-                        "-lshell32"
-                        "-luser32"
-                        "-luserenv"
-                        "-lws2_32"]
+              :windows ["advapi32.lib"
+                        "iphlpapi.lib"
+                        "psapi.lib"
+                        "shell32.lib"
+                        "user32.lib"
+                        "userenv.lib"
+                        "ws2_32.lib"]
               :linux ["-pthread"]
               #default
               ["-pthread"]))
 
 (declare-native
-    :name "uv"
-    :lflags lflags
-    :cflags ["-Ilibuv/include" "-Ilibuv/src"]
-    :defines {"_POSIX_C_SOURCE" "200112"
-              "_GNU_SOURCE" true}
+  :name "uv"
+  :lflags lflags
+  :cflags [;default-cflags "-Ilibuv/include" "-Ilibuv/src"]
+  :defines (case (os/which)
+             :windows {"_WIN32_WINNT" "0x0600"
+                       "_GNU_SOURCE" true}
+             # default
+             {"_POSIX_C_SOURCE" "200112"
+              "_GNU_SOURCE" true})
+
     :embedded ["embed/entry.janet"]
     :headers @["src/entry.h"
                "src/handle.h"

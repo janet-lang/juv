@@ -97,8 +97,10 @@
 
               # macos specific
               ;(if (= (os/which) :macos)
-                ["libuv/src/unix/darwin.c"
+                ["libuv/src/unix/bsd-ifaddrs.c"
+                 "libuv/src/unix/darwin.c"
                  "libuv/src/unix/fsevents.c"
+                 "libuv/src/unix/kqueue.c"
                  "libuv/src/unix/darwin-proctitle.c"
                  "libuv/src/unix/random-getentropy.c"]
                 [])

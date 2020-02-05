@@ -23,6 +23,7 @@
   :defines (case (os/which)
              :windows {"_WIN32_WINNT" "0x0600"
                        "_GNU_SOURCE" true}
+             :macos {"_GNU_SOURCE" true}
              # default
              {"_POSIX_C_SOURCE" "200112"
               "_GNU_SOURCE" true})

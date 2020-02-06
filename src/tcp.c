@@ -1,7 +1,7 @@
 #include "entry.h"
 #include "stream.h"
 
-static Janet tcp_method_get(void *p, Janet key);
+static int tcp_method_get(void *p, Janet key, Janet *out);
 const JanetAbstractType tcp_type = {
     "uv/tcp",
     NULL,
@@ -153,11 +153,11 @@ static const JanetMethod tcp_methods[] = {
     {NULL, NULL}
 };
 
-static Janet tcp_method_get(void *p, Janet key) {
+static int tcp_method_get(void *p, Janet key, Janet *out) {
     (void) p;
     if (!janet_checktype(key, JANET_KEYWORD))
         janet_panicf("expected keyword, got %v", key);
-    return janet_getmethod(janet_unwrap_keyword(key), tcp_methods);
+    return janet_getmethod(janet_unwrap_keyword(key), tcp_methods, out);
 }
 
 void submod_tcp(JanetTable *env) {

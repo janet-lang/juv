@@ -23,6 +23,7 @@
   :defines (case (os/which)
              :windows {"_WIN32_WINNT" "0x0600"
                        "_GNU_SOURCE" true}
+             :macos {"_GNU_SOURCE" true}
              # default
              {"_POSIX_C_SOURCE" "200112"
               "_GNU_SOURCE" true})
@@ -96,8 +97,10 @@
 
               # macos specific
               ;(if (= (os/which) :macos)
-                ["libuv/src/unix/darwin.c"
+                ["libuv/src/unix/bsd-ifaddrs.c"
+                 "libuv/src/unix/darwin.c"
                  "libuv/src/unix/fsevents.c"
+                 "libuv/src/unix/kqueue.c"
                  "libuv/src/unix/darwin-proctitle.c"
                  "libuv/src/unix/random-getentropy.c"]
                 [])

@@ -1,6 +1,6 @@
 #include "entry.h"
 
-static Janet timer_method_get(void *p, Janet key);
+static int timer_method_get(void *p, Janet key, Janet *out);
 static const JanetAbstractType timer_type = {
     "uv/timer",
     NULL,
@@ -103,11 +103,11 @@ static const JanetMethod timer_methods[] = {
     {NULL, NULL}
 };
 
-static Janet timer_method_get(void *p, Janet key) {
+static int timer_method_get(void *p, Janet key, Janet *out) {
     (void) p;
     if (!janet_checktype(key, JANET_KEYWORD))
         janet_panicf("expected keyword, got %v", key);
-    return janet_getmethod(janet_unwrap_keyword(key), timer_methods);
+    return janet_getmethod(janet_unwrap_keyword(key), timer_methods, out);
 }
 
 static const JanetReg cfuns[] = {

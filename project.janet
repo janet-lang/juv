@@ -3,22 +3,22 @@
   :license "MIT"
   :author "Calvin Rose")
 
-# Use pkg-config for now to get libuv flags
-(def lflags (case (os/which)
-              :windows @["advapi32.lib"
-                        "iphlpapi.lib"
-                        "psapi.lib"
-                        "shell32.lib"
-                        "user32.lib"
-                        "userenv.lib"
-                        "ws2_32.lib"]
-              :linux @["-pthread"]
-              #default
-              @["-pthread"]))
+(trace shell)
+
+(def lflags
+  (case (os/which)
+    :windows @["advapi32.lib"
+               "iphlpapi.lib"
+               "psapi.lib"
+               "shell32.lib"
+               "user32.lib"
+               "userenv.lib"
+               "ws2_32.lib"]
+    @["-lpthread"]))
 
 (declare-native
   :name "uv"
-  :lflags lflags
+  :lflags [;default-lflags ;lflags]
   :cflags [;default-cflags "-Ilibuv/include" "-Ilibuv/src"]
   :defines (case (os/which)
              :windows {"_WIN32_WINNT" "0x0600"

@@ -3,8 +3,6 @@
   :license "MIT"
   :author "Calvin Rose")
 
-(trace shell)
-
 (def lflags
   (case (os/which)
     :windows @["advapi32.lib"

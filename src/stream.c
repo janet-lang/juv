@@ -9,9 +9,7 @@ uv_stream_t *juv_getstream(const Janet *argv, int32_t n) {
     if (!janet_checktype(x, JANET_ABSTRACT)) goto bad;
     void *abstractx = janet_unwrap_abstract(x);
     const JanetAbstractType *tp = janet_abstract_type(abstractx); 
-    if (tp == &tcp_type ||
-            tp == &pipe_type ||
-            tp == &tty_type) {
+    if (tp == &tcp_type) {
         return juv_abstract2handle(abstractx);
     }
 bad:

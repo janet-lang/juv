@@ -33,11 +33,7 @@ static const JanetAbstractType file_type = {
     "uv/file",
     NULL,
     juv_handle_mark,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    JANET_ATEND_GCMARK
 };
 
 /* Wrap a file descriptor */

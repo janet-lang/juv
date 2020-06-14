@@ -6,10 +6,7 @@ static const JanetAbstractType timer_type = {
     NULL,
     juv_handle_mark,
     timer_method_get,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    JANET_ATEND_GET
 };
 
 static Janet cfun_timer_new(int32_t argc, Janet *argv) {

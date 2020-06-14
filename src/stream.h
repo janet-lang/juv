@@ -5,8 +5,8 @@
 #include "entry.h"
 
 extern const JanetAbstractType tcp_type;
-extern const JanetAbstractType pipe_type;
-extern const JanetAbstractType tty_type;
+/* extern const JanetAbstractType pipe_type; */
+/* extern const JanetAbstractType tty_type; */
 
 uv_stream_t *juv_getstream(const Janet *argv, int32_t n);
 

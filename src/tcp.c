@@ -7,10 +7,7 @@ const JanetAbstractType tcp_type = {
     NULL,
     juv_handle_mark,
     tcp_method_get,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    JANET_ATEND_GET
 };
 
 static Janet juv_tcp_new(int32_t argc, Janet *argv) {

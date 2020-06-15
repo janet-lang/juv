@@ -14,10 +14,12 @@
                "ws2_32.lib"]
     @["-lpthread"]))
 
+(def is-win (= :windows (os/which)))
+
 (declare-native
   :name "uv"
   :lflags [;default-lflags ;lflags]
-  :cflags [;default-cflags "-Ilibuv/include" "-Ilibuv/src"]
+  :cflags [;default-cflags "-Ilibuv/include" "-Ilibuv/src" ;(if is-win [] ["-Wno-unused-parameter"])]
   :defines (case (os/which)
              :windows {"_WIN32_WINNT" "0x0600"
                        "_GNU_SOURCE" true}

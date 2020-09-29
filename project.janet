@@ -119,6 +119,7 @@
               # Janet wrappers
               "src/entry.c"
               "src/fs.c"
+              "src/fs_event.c"
               "src/handle.c"
               "src/stream.c"
               "src/tcp.c"

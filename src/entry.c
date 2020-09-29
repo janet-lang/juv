@@ -38,6 +38,7 @@ JANET_MODULE_ENTRY(JanetTable *env) {
     janet_def(env, "version", janet_cstringv(uv_version_string()),
             "Libuv version string as a semantic version.");
     submod_fs(env);
+    submod_fs_event(env);
     submod_timer(env);
     submod_tcp(env);
     submod_stream(env);

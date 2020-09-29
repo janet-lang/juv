@@ -24,36 +24,36 @@ static Janet cfun_fs_event_new(int32_t argc, Janet *argv) {
 static void fs_event_cleanup(uv_fs_event_t *t) {
     int res = uv_fs_event_stop(t);
     janet_gcunroot(juv_wrap_handle(t));
-    juv_handle_setfiber(t, 1, NULL);
+    juv_handle_setcb(t, 1, NULL);
     if (res < 0) juv_panic(res);
 }
 
-static void juv_fs_event_cb(uv_fs_event_t* handle, const char *filename, int events, int status) {
-    JanetFiber *fiber = juv_handle_fiber(handle, 1);
-    if (fiber == NULL) {
-        fs_event_cleanup(handle);
-        return;
-    }
-    Janet out;
-    JanetSignal sig = janet_continue(fiber, janet_wrap_nil(), &out);
-    if (sig == JANET_SIGNAL_YIELD) {
-        ;
-    } else if (sig == JANET_SIGNAL_OK) {
-        fs_event_cleanup(handle);
+static void juv_fs_event_cb(uv_fs_event_t *handle, const char *filename, int events, int status) {
+    if (status) {
+        juv_panic(status);
     } else {
-        fs_event_cleanup(handle);
-        juv_toperror(sig, out);
+        JanetFunction *cb = juv_handle_cb(handle, 1);
+        Janet argv[] = { juv_wrap_handle(handle),
+                         janet_wrap_string(janet_cstring(filename)),
+                         janet_wrap_integer(events) };
+        Janet out = janet_wrap_nil();
+        JanetFiber *f = NULL;
+        JanetSignal sig = janet_pcall(cb, 3, argv, &out, &f);
+        if (sig != JANET_SIGNAL_OK && sig != JANET_SIGNAL_YIELD)
+            juv_toperror(sig, out);
     }
 }
 
 static Janet cfun_fs_event_start(int32_t argc, Janet *argv) {
-    janet_fixarity(argc, 3);
+    janet_fixarity(argc, 4);
     uv_fs_event_t *handle = juv_gethandle(argv, 0, &fs_event_type);
-    if (juv_handle_fiber(handle, 1) == NULL) {
-        janet_panic("fs event monitor has been destroyed, cannot be restarted");
+    JanetFunction *cb = janet_getfunction(argv, 1);
+    if (NULL != juv_handle_cb(handle, 1)) {
+        janet_panic("cannot have multiple callbacks on fs event monitor");
     }
-    const char *path = janet_getcstring(argv, 1);
-    uint64_t flags = janet_getinteger(argv, 2);
+    juv_handle_setcb(handle, 1, cb);
+    const char *path = janet_getcstring(argv, 2);
+    uint64_t flags = janet_getinteger(argv, 3);
     int ret = uv_fs_event_start(handle, juv_fs_event_cb, path, flags);
     if (ret < 0) juv_panic(ret);
     return argv[0];

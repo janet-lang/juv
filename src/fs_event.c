@@ -38,10 +38,18 @@ static void juv_fs_event_cb(uv_fs_event_t *handle, const char *filename, int eve
                          janet_wrap_string(janet_cstring(filename)),
                          janet_wrap_integer(events) };
         Janet out = janet_wrap_nil();
-        JanetFiber *f = NULL;
-        JanetSignal sig = janet_pcall(cb, 3, argv, &out, &f);
+        JanetFiber *cb_f = janet_fiber(cb, 64, 3, argv);
+        JanetSignal sig;
+        if (!cb_f) {
+            out = janet_cstringv("arity mismatch");
+            sig = JANET_SIGNAL_ERROR;
+        } else {
+            JanetFiber *handle_f = juv_handle_fiber(handle, 0);
+            cb_f->env = handle_f->env;
+            sig = janet_continue(cb_f, janet_wrap_nil(), &out);
+        }
         if (sig != JANET_SIGNAL_OK && sig != JANET_SIGNAL_YIELD) {
-            janet_stacktrace(f, out);
+            janet_stacktrace(cb_f, out);
             juv_toperror(sig, out);
         }
     }

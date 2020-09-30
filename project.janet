@@ -40,8 +40,8 @@
               "libuv/src/strscpy.c"
               "libuv/src/threadpool.c"
               "libuv/src/timer.c"
-              "libuv/src/uv-data-getter-setters.c"
               "libuv/src/uv-common.c"
+              "libuv/src/uv-data-getter-setters.c"
               "libuv/src/version.c"
 
               # windows vs. non-windows
@@ -60,7 +60,6 @@
                   "libuv/src/win/handle.c"
                   "libuv/src/win/loop-watcher.c"
                   "libuv/src/win/pipe.c"
-                  "libuv/src/win/thread.c"
                   "libuv/src/win/poll.c"
                   "libuv/src/win/process.c"
                   "libuv/src/win/process-stdio.c"
@@ -68,12 +67,13 @@
                   "libuv/src/win/snprintf.c"
                   "libuv/src/win/stream.c"
                   "libuv/src/win/tcp.c"
+                  "libuv/src/win/thread.c"
                   "libuv/src/win/tty.c"
                   "libuv/src/win/udp.c"
                   "libuv/src/win/util.c"
                   "libuv/src/win/winapi.c"
                   "libuv/src/win/winsock.c"]
-                 
+
                  # not windows (posix)
                  ["libuv/src/unix/async.c"
                   "libuv/src/unix/core.c"
@@ -112,10 +112,9 @@
                   "libuv/src/unix/linux-syscalls.c"
                   "libuv/src/unix/procfs-exepath.c"
                   "libuv/src/unix/random-getrandom.c"
-                  "libuv/src/unix/random-sysctl.c"
-                  "libuv/src/unix/sysinfo-loadavg.c"]
+                  "libuv/src/unix/random-sysctl-linux.c"]
                  [])
-              
+
               # Janet wrappers
               "src/entry.c"
               "src/fs.c"

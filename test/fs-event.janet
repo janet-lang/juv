@@ -24,7 +24,8 @@
                      (print "File " counter " changed: " path)
                      (set counter (+ 1 counter))
                      (thread/send parent (string "Updated file: " path) 0))
-          handle   (uv/fs-event/new (fiber/new (fn [&]) :yi))]
+          fiber    (fiber/new (fn []) :yi)
+          handle   (uv/fs-event/new fiber)]
       (uv/fs-event/start handle callback "tmp" 0)
       (thread/send parent "Monitor started"))))
 

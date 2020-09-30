@@ -17,13 +17,14 @@ static Janet cfun_fs_event_new(int32_t argc, Janet *argv) {
     if (ret < 0) janet_panic("could not create fs event monitor");
     Janet val = juv_wrap_handle(handle);
     janet_gcroot(val);
-    juv_handle_setfiber(handle, 1, fiber);
+    juv_handle_setfiber(handle, 0, fiber);
     return val;
 }
 
 static void fs_event_cleanup(uv_fs_event_t *t) {
     int res = uv_fs_event_stop(t);
     janet_gcunroot(juv_wrap_handle(t));
+    juv_handle_setfiber(t, 0, NULL);
     juv_handle_setcb(t, 1, NULL);
     if (res < 0) juv_panic(res);
 }
@@ -39,8 +40,10 @@ static void juv_fs_event_cb(uv_fs_event_t *handle, const char *filename, int eve
         Janet out = janet_wrap_nil();
         JanetFiber *f = NULL;
         JanetSignal sig = janet_pcall(cb, 3, argv, &out, &f);
-        if (sig != JANET_SIGNAL_OK && sig != JANET_SIGNAL_YIELD)
+        if (sig != JANET_SIGNAL_OK && sig != JANET_SIGNAL_YIELD) {
+            janet_stacktrace(f, out);
             juv_toperror(sig, out);
+        }
     }
 }
 

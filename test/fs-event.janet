@@ -38,7 +38,9 @@
   (thread/exit))
 
 (def monitor-thread (thread/new monitor))
-(print (thread/receive 5))
+(def monitor-start-msg (thread/receive 5))
+(print monitor-start-msg)
+
 (def writer-thread (thread/new writer))
 
 (loop [i :range [0 4]]

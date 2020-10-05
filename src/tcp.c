@@ -154,7 +154,6 @@ static int tcp_method_get(void *p, Janet key, Janet *out) {
     (void) p;
     if (!janet_checktype(key, JANET_KEYWORD))
         janet_panicf("expected keyword, got %v", key);
-    printf("key: %s\n", janet_unwrap_keyword(key));
     return janet_getmethod(janet_unwrap_keyword(key), tcp_methods, out);
 }
 

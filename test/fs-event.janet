@@ -27,7 +27,7 @@
           fiber    (fiber/new (fn []) :yi)
           handle   (uv/fs-event/new fiber)]
       (uv/fs-event/start handle callback "tmp" 0)
-      (thread/send parent "Monitor started"))))
+      (thread/send parent (string "Monitoring directory: " (uv/fs-event/getpath handle))))))
 
 (defn writer
   [parent]

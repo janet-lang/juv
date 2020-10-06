@@ -78,6 +78,17 @@ static Janet cfun_fs_event_stop(int32_t argc, Janet *argv) {
     return janet_wrap_nil();
 }
 
+static Janet cfun_fs_event_getpath(int32_t argc, Janet *argv) {
+    janet_fixarity(argc, 1);
+    uv_fs_event_t *handle = juv_gethandle(argv, 0, &fs_event_type);
+    char buf[1024];
+    size_t pathlen = 1023;
+    int r = uv_fs_event_getpath(handle, (char *)&buf, &pathlen);
+    if (r) juv_panic(r);
+    JanetString pathname = janet_string((uint8_t *)buf, pathlen);
+    return janet_wrap_string(pathname);
+}
+
 static const JanetMethod fs_event_methods[] = {
     {"start", cfun_fs_event_start},
     {"stop", cfun_fs_event_stop},
@@ -95,6 +106,7 @@ static const JanetReg cfuns[] = {
     {"fs-event/new", cfun_fs_event_new, NULL},
     {"fs-event/start", cfun_fs_event_start, NULL},
     {"fs-event/stop", cfun_fs_event_stop, NULL},
+    {"fs-event/getpath", cfun_fs_event_getpath, NULL},
     {NULL, NULL, NULL}
 };
 

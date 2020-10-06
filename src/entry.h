@@ -28,6 +28,7 @@ extern int juv_last_error;
 
 /* submodules */
 void submod_fs(JanetTable *env);
+void submod_fs_event(JanetTable *env);
 void submod_timer(JanetTable *env);
 void submod_tcp(JanetTable *env);
 void submod_stream(JanetTable *env);

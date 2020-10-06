@@ -92,6 +92,7 @@ static Janet cfun_fs_event_getpath(int32_t argc, Janet *argv) {
 static const JanetMethod fs_event_methods[] = {
     {"start", cfun_fs_event_start},
     {"stop", cfun_fs_event_stop},
+    {"getpath", cfun_fs_event_getpath},
     {NULL, NULL}
 };
 

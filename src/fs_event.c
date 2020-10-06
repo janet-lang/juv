@@ -29,7 +29,7 @@ static void fs_event_cleanup(uv_fs_event_t *t) {
     if (res < 0) juv_panic(res);
 }
 
-static void juv_fs_event_cb(uv_fs_event_t *handle, const char *filename, int events, int status) {
+static void fs_event_cb(uv_fs_event_t *handle, const char *filename, int events, int status) {
     if (status) {
         juv_panic(status);
     } else {
@@ -65,7 +65,7 @@ static Janet cfun_fs_event_start(int32_t argc, Janet *argv) {
     juv_handle_setcb(handle, 1, cb);
     const char *path = janet_getcstring(argv, 2);
     uint64_t flags = janet_getinteger(argv, 3);
-    int ret = uv_fs_event_start(handle, juv_fs_event_cb, path, flags);
+    int ret = uv_fs_event_start(handle, fs_event_cb, path, flags);
     if (ret < 0) juv_panic(ret);
     return argv[0];
 }

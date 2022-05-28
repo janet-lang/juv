@@ -1,5 +1,7 @@
 (declare-project
   :name "uv"
+  :description "Janet bindings to libuv"
+  :url "https://github.com/janet-lang/juv"
   :license "MIT"
   :author "Calvin Rose")
 
